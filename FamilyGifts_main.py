@@ -10,7 +10,7 @@ from tkinter import messagebox
 # liste vide pour acceuillir les gens :
 liste_humans = []
 
-# Définissions un être humain : 
+# Chaque personne sera Humaine : 
 class Human() : 
     def __init__(self, nom, nom_partenaire = None): 
         self.nom = nom 
@@ -21,8 +21,8 @@ class Human() :
     def reset(self):
         self.donne_a_qui = [None, None]
 
+# Algorithme de tirage au sort
 def tirage(round = 0): 
-    
     destinataires_disponibles = liste_humans[:]
     random.shuffle(destinataires_disponibles) 
 
@@ -31,34 +31,31 @@ def tirage(round = 0):
         attempts = 0 # Compteur de tentatives
 
         while not selected:
-            # Si on a tout essayé, c'est sûrement un blocage
+
+            # 1. Gestion des erreurs : 
+            # Si on a essayé toutes les combinaisons mais rien ne marche
             if not destinataires_disponibles or attempts > len(liste_humans):
                 messagebox.showerror("Erreur de tirage", 
-                                     "Impossible de trouver une solution avec les contraintes actuelles. "
-                                     "Essayez avec plus de participants ou moins de contraintes.")
-                return # On arrête tout pour éviter de geler
+                                     "Essayez avec plus de participants ou moins de règles.")
+                return # stoppe la fonction
 
-            # On prend le prochain destinataire disponible
+            # 2. Sélection du prochain destinataire
             pick = destinataires_disponibles.pop(0)
-            attempts += 1 # On incrémente le compteur
+            attempts += 1 
 
-            # On vérifie les règles
-            if pick.nom != human.nom and \
-               pick.nom != human.couple and \
-               pick not in human.donne_a_qui:
+            # 3. Check les règles
+            if pick.nom != human.nom and pick.nom != human.couple and pick not in human.donne_a_qui:
                 selected = pick
             else:
-                # Si le choix n'est pas bon, on le remet à la fin de la liste pour lui donner une autre chance
-                destinataires_disponibles.append(pick)
+                destinataires_disponibles.append(pick) # Si le choix n'est pas bon, on le remet à la fin de la liste pour lui donner une autre chance
 
         if selected:
             human.donne_a_qui[round] = selected
         else:
-            # Si on sort de la boucle sans solution (grâce à la sécurité), on arrête.
             return 
 
 
-
+# Fonction basique de tirage / affichage des résultats 
 def launch_tirage(): 
     for i in liste_humans : 
         i.reset()
