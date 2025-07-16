@@ -15,14 +15,24 @@ Une petite appli pour organiser un tirage au sort de cadeaux avec gestion des co
 
 ![screenshot2](/screenshot2.png)
 
+## Lancement
+### Lancement depuis l'exécutable
+Solution la plus simple.
+Téléchargez et lancez l'application compliée dans la rubrique "releases" pour MacOS et Windows. 
 
-## Prérequis
+### Lancer le script python
+#### 1. Prérequis
 python >= 3.9
+```
 pip install plotly matplotlib
+```
 
-#Lancer l’application
-
+### 2. Lancer l’application
+```
 python gestionnaire_cadeaux.py
+```
+
+## Utilisation
 
 	1.	Saisissez les noms des participants puis cliquez sur Ajouter.
 	2.	Spécifiez éventuellement les couples via la liste déroulante.
