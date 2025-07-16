@@ -84,34 +84,33 @@ def launch_tirage():
 
 def display_results(): 
 
-    # Préparer les données
     personnes = [human.nom for human in liste_humans]
 
-    # Créer des mappings
+    # Créer des correspondances
     name_to_idx = {name: idx for idx, name in enumerate(personnes)}
 
-    # Préparer les données pour le diagramme Sankey
+    # Préparation du graphe
     source = []
     target = []
     value = []
     labels = personnes
 
-    # Utiliser une palette de couleurs esthétiques
+    # Couleurs
     cmap = plt.cm.get_cmap('Set3', len(personnes))
     node_colors = [mcolors.rgb2hex(cmap(i)) for i in range(len(personnes))]
 
-    # Créer les listes source, target et value
+    # Sources et targets
     for human in liste_humans:
         idx_from = name_to_idx[human.nom]
         for recipient in human.donne_a_qui:
             idx_to = name_to_idx[recipient.nom]
             source.append(idx_from)
             target.append(idx_to)
-            value.append(1)  # Supposons que chaque cadeau a la même valeur
+            value.append(1)  # Chaque cadeau a la même valeur, sinon c'est bizarre
 
-    # Créer le diagramme Sankey
+    # Display le graphe
     fig = go.Figure(data=[go.Sankey(
-        arrangement="snap",  # Pour une disposition claire
+        arrangement="snap",  # Plus beau
         node=dict(
             pad=20,
             thickness=30,
@@ -123,11 +122,11 @@ def display_results():
             source=source,
             target=target,
             value=value,
-            color=[node_colors[s] for s in source],  # Les liens ont la couleur du nœud source
+            color=[node_colors[s] for s in source],  # Les liens ont la couleur du nœud source, important sinon on se mélange !
         )
     )])
 
-    # Mettre à jour la mise en page pour une meilleure esthétique et un dézoom
+    # Dézoom et ajustements
     fig.update_layout(
         title_text='🎄 Tirage au sort des cadeaux de Noël 🎁',
         font_size=16,
@@ -141,14 +140,14 @@ def display_results():
         margin=dict(l=50, r=50, t=100, b=50)  # Ajouter des marges
     )
 
-    # Afficher le diagramme
+
     fig.show()
 
 def ajouter_personne(event=None):
     nom_personne = entree_nom.get()
-    if nom_personne: # S'assure que le champ n'est pas vide
+    if nom_personne: # que le champ ne soit pas vide
         Human(nom=nom_personne)
-        entree_nom.delete(0, tk.END) # Vide la boite
+        entree_nom.delete(0, tk.END)
         maj_liste_participants()
 
 def delete_person(person=None): 
