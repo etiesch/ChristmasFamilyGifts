@@ -22,13 +22,13 @@ Solution la plus simple.
 Téléchargez et lancez l'application compliée dans la rubrique "releases" pour MacOS et Windows. 
 
 ### Lancer le script python
-#### 1. Prérequis
+###### 1. Prérequis
 python >= 3.9
 ```
 pip install plotly matplotlib
 ```
 
-### 2. Lancer l’application
+###### 2. Lancer l’application
 ```
 python gestionnaire_cadeaux.py
 ```
