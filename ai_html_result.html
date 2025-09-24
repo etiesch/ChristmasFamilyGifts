@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🎅 Gestionnaire de Cadeaux — Web</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --muted:#94a3b8;
+    --accent:#ef4444;
+    --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+    --success: #10b981;
+    --danger:#f97316;
+    --white:#f8fafc;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 10% 10%, rgba(239,68,68,0.06), transparent 10%),
+      linear-gradient(180deg, #071023 0%, #081025 40%, #04101b 100%);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .wrap{
+    max-width:1100px;
+    margin:32px auto;
+    padding:28px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:16px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+    display:grid;
+    gap:20px;
+    grid-template-columns: 420px 1fr;
+  }
+
+  header{
+    grid-column:1/-1;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+
+  .logo{
+    height:64px;
+    width:64px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    background:linear-gradient(135deg, #f97316, #ef4444);
+    box-shadow: 0 6px 18px rgba(239,68,68,0.2);
+  }
+
+  h1{
+    margin:0;
+    font-size:20px;
+    letter-spacing:0.2px;
+  }
+  p.lead{ margin:0; color:var(--muted); font-size:13px }
+
+  .card{
+    background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+
+  /* left column */
+  .left{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  label.small{ font-size:13px; color:var(--muted); display:block; margin-bottom:8px }
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  input[type="text"]{
+    flex:1;
+    background:var(--glass);
+    border:1px solid rgba(255,255,255,0.03);
+    color:var(--white);
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:14px;
+  }
+
+  button.btn{
+    background:linear-gradient(180deg,#ef4444,#f97316);
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    box-shadow: 0 8px 24px rgba(239,68,68,0.18);
+  }
+  button.ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.05);
+    color:var(--white);
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+
+  .participants{
+    max-height:420px;
+    overflow:auto;
+    padding:8px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .person{
+    display:grid;
+    grid-template-columns:32px 1fr 160px 40px;
+    gap:8px;
+    align-items:center;
+    background:var(--glass-2);
+    padding:8px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+
+  .avatar{
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#60a5fa,#7c3aed);
+    font-weight:700; font-size:13px; color:white;
+  }
+
+  .person .name{ font-size:15px; font-weight:600; color:var(--white) }
+  select.partner{
+    width:100%;
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.03);
+    color:var(--white);
+    padding:8px;
+    border-radius:8px;
+    font-size:13px;
+  }
+
+  .right{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .info{
+    color:var(--muted);
+    background:transparent;
+    border-radius:8px;
+    padding:10px;
+    font-size:13px;
+  }
+
+  .run-btn{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+
+  .result-view{
+    height:560px;
+    overflow:auto;
+    padding:12px;
+  }
+
+  /* modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(2,6,23,0.6);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .modal{
+    width:min(1000px,95%);
+    background:linear-gradient(180deg,#061122, #071425);
+    border-radius:12px;
+    padding:16px;
+    box-shadow: 0 30px 80px rgba(2,6,23,0.8);
+  }
+
+  .modal-header{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .modal-title{ font-size:18px; margin:0 }
+  .close{ background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:18px }
+
+  pre.results{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    padding:12px; border-radius:8px; margin:12px 0; white-space:pre-wrap; color:var(--white)
+  }
+
+  footer.note{
+    grid-column:1/-1;
+    font-size:13px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  @media (max-width:980px){
+    .wrap{ grid-template-columns: 1fr; margin:20px; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap" role="application" aria-labelledby="app-title">
+  <header>
+    <div class="logo" aria-hidden>🎁</div>
+    <div>
+      <h1 id="app-title">🎅 Gestionnaire de Cadeaux — Web</h1>
+      <p class="lead">Add participants, set partners, and run the two-round Secret Santa draw with a Sankey visualization.</p>
+    </div>
+  </header>
+
+  <section class="card left" aria-label="Participants control">
+    <div>
+      <label class="small">Ajouter une personne</label>
+      <div class="add-row">
+        <input id="nameInput" type="text" placeholder="Nom..." aria-label="Nom de la personne" />
+        <button id="addBtn" class="btn" title="Ajouter">Ajouter</button>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button id="randomDemo" class="ghost" title="Ajouter un exemple">Remplir ex. (demo)</button>
+        <button id="clearAll" class="ghost" title="Supprimer tout">Effacer tout</button>
+      </div>
+    </div>
+
+    <hr style="border:none; height:1px; background:rgba(255,255,255,0.02); margin:12px 0" />
+
+    <label class="small">Participants</label>
+    <div id="participants" class="participants" aria-live="polite"></div>
+  </section>
+
+  <section class="card right" aria-label="Controls and results">
+    <div class="controls">
+      <div class="info">Participants: <strong id="count">0</strong></div>
+      <div style="flex:1"></div>
+      <div class="run-btn">
+        <button id="runBtn" class="btn">Lancer le tirage</button>
+      </div>
+    </div>
+
+    <div style="height:8px"></div>
+
+    <div class="result-view" id="resultView" aria-live="polite">
+      <div style="color:var(--muted); font-size:13px; margin-bottom:8px">Résultats récents</div>
+      <div id="lastText" style="min-height:80px; color:var(--white); font-family:monospace;"></div>
+      <div id="plotArea" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <footer class="note">
+    <div>Rules: no self, no partner, no repeat recipient per person across rounds.</div>
+    <div>Made with ❤️ — single file</div>
+  </footer>
+</div>
+
+<!-- Modal template -->
+<div id="modalRoot" aria-hidden="true" style="display:none"></div>
+
+<!-- Plotly CDN (used for sankey) -->
+<script src="https://cdn.plot.ly/plotly-2.25.2.min.js"></script>
+
+<script>
+/*
+  Web reimplementation of the provided Python app.
+  - Participants stored as objects with {name, partner, donne_a_qui: [null,null]}
+  - Two-round draw, constraints:
+     * recipient !== giver
+     * recipient !== partner
+     * recipient not already assigned to same giver (no duplicate across rounds)
+  - Algorithm: greedy with retries and full-restart fallback to avoid stuck states.
+*/
+
+// Data model
+const participants = [];
+
+// Utilities
+function uidSeed(name){ return name.trim().toLowerCase().replace(/\\s+/g, '_'); }
+function updateCount(){ document.getElementById('count').textContent = participants.length; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
+function cloneParticipants(){ return participants.map(p => ({...p, donne_a_qui:[null,null]})); }
+
+// UI helpers
+const participantsEl = document.getElementById('participants');
+const nameInput = document.getElementById('nameInput');
+const addBtn = document.getElementById('addBtn');
+const runBtn = document.getElementById('runBtn');
+const clearAll = document.getElementById('clearAll');
+const randomDemo = document.getElementById('randomDemo');
+const lastText = document.getElementById('lastText');
+const plotArea = document.getElementById('plotArea');
+const modalRoot = document.getElementById('modalRoot');
+
+function renderParticipants(){
+  participantsEl.innerHTML = '';
+  const names = participants.map(p => p.name);
+  const options = [' ' , ...names];
+
+  participants.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.className = 'person';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = p.name.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+    row.appendChild(avatar);
+
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'name';
+    nameDiv.textContent = p.name;
+    row.appendChild(nameDiv);
+
+    const select = document.createElement('select');
+    select.className = 'partner';
+    select.setAttribute('aria-label', 'Partenaire de ' + p.name);
+    options.forEach(opt => {
+      const el = document.createElement('option');
+      el.value = opt;
+      el.textContent = opt;
+      select.appendChild(el);
+    });
+    select.value = p.partner || ' ';
+    select.addEventListener('change', () => {
+      p.partner = select.value === ' ' ? null : select.value;
+    });
+    row.appendChild(select);
+
+    const delBtn = document.createElement('button');
+    delBtn.innerHTML = '❌';
+    delBtn.title = 'Supprimer';
+    delBtn.className = 'ghost';
+    delBtn.addEventListener('click', () => {
+      participants.splice(idx,1);
+      renderParticipants();
+      updateCount();
+    });
+    row.appendChild(delBtn);
+
+    participantsEl.appendChild(row);
+  });
+  updateCount();
+}
+
+// Add participant
+function addParticipant(name){
+  const n = (name||'').trim();
+  if(!n) return;
+  if(participants.some(p => p.name.toLowerCase() === n.toLowerCase())){
+    // simple dedupe
+    alert('Le nom existe déjà.');
+    return;
+  }
+  participants.push({name:n, partner:null, donne_a_qui:[null,null]});
+  renderParticipants();
+  nameInput.value='';
+}
+
+// Draw algorithm
+function tryDrawOnce(allParticipants){
+  // allParticipants: array of objects (mutable) each with name, partner, donne_a_qui
+  // We'll perform two rounds sequentially. For each round we try assign using
+  // greedy + rotate as in original Python. If we cannot assign someone after attempts, return false.
+  const N = allParticipants.length;
+
+  for(let round = 0; round < 2; round++){
+    // create queue of available recipients
+    let recipients = allParticipants.slice();
+    shuffle(recipients);
+
+    for(let giver of allParticipants){
+      let selected = null;
+      let attempts = 0;
+      // Attempt loop: pop first, test, else push end
+      while(!selected){
+        if(recipients.length === 0 || attempts > N*2){
+          // failed this round
+          return false;
+        }
+        const cand = recipients.shift();
+        attempts++;
+        // rules
+        if(cand.name !== giver.name &&
+           cand.name !== (giver.partner || null) &&
+           // not already assigned previously to same giver across rounds
+           !giver.donne_a_qui.includes(cand) &&
+           // cand is allowed even if already selected by other givers (that's allowed in original)
+           true){
+             selected = cand;
+        } else {
+          // push to end for another chance
+          recipients.push(cand);
+        }
+      }
+      if(selected){
+        giver.donne_a_qui[round] = selected;
+        // Note: don't remove selected from pool permanently (original pops then appends), but since we popped it
+        // we don't reinsert it; that models original destinataires_disponibles.pop(0) and not reappend when selected.
+        // This means each recipient can be chosen multiple times across givers only if reinserted earlier — original allowed
+        // multiple givers to pick the same recipient because destinataires_disponibles was shared but once chosen removed.
+        // To match original behavior strictly: once selected it's removed for the rest of this round. Done.
+      } else {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function runDraw(){
+  if(participants.length < 2){
+    alert('Ajoutez au moins 2 participants.');
+    return;
+  }
+  // deep clone participants so we can mutate donne_a_qui
+  const maxRestarts = 2000;
+  let attempt = 0;
+  let success = false;
+  let working = null;
+
+  while(attempt < maxRestarts && !success){
+    attempt++;
+    // reset donne_a_qui
+    const clone = cloneParticipants();
+    // Attempt draw, but algorithm above may fail; if fail, try again
+    success = tryDrawOnce(clone);
+    if(success){
+      working = clone;
+      break;
+    }
+  }
+
+  if(!success){
+    alert("Erreur de tirage: impossible de trouver une solution. Essayez avec plus de participants ou moins de contraintes (moins de couples).");
+    return;
+  }
+
+  // Commit results to main participants list (keep original objects but update donne_a_qui references to participant objects)
+  // working contains copies; map by name to original participant object references
+  const nameToOriginal = {};
+  participants.forEach(p => { nameToOriginal[p.name] = p; p.donne_a_qui = [null,null]; });
+
+  // Now fill original participants' donne_a_qui with references to original participant objects
+  for(let w of working){
+    const orig = nameToOriginal[w.name];
+    orig.donne_a_qui[0] = nameToOriginal[w.donne_a_qui[0].name];
+    orig.donne_a_qui[1] = nameToOriginal[w.donne_a_qui[1].name];
+  }
+
+  // Build result text
+  let resultText = '';
+  participants.forEach(p => {
+    resultText += `${p.name} ----> ${p.donne_a_qui[0].name} et ${p.donne_a_qui[1].name}!\n`;
+  });
+
+  lastText.textContent = resultText;
+  showModal(resultText);
+  renderSankey();
+}
+
+// Modal with plot container
+function showModal(resultText){
+  modalRoot.innerHTML = '';
+  modalRoot.style.display = 'flex';
+  modalRoot.setAttribute('aria-hidden','false');
+
+  const back = document.createElement('div');
+  back.className = 'modal-backdrop';
+  back.tabIndex = -1;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+
+  const title = document.createElement('h3');
+  title.className = 'modal-title';
+  title.textContent = 'Résultats du tirage';
+
+  const close = document.createElement('button');
+  close.className = 'close';
+  close.innerHTML = '✖';
+  close.addEventListener('click', () => { modalRoot.style.display='none'; modalRoot.setAttribute('aria-hidden','true'); });
+
+  header.appendChild(title);
+  header.appendChild(close);
+
+  const pre = document.createElement('pre');
+  pre.className = 'results';
+  pre.textContent = resultText;
+
+  const plotDiv = document.createElement('div');
+  plotDiv.id = 'modalPlot';
+  plotDiv.style.width = '100%';
+  plotDiv.style.height = '520px';
+  plotDiv.style.marginTop = '8px';
+
+  const footer = document.createElement('div');
+  footer.style.display='flex';
+  footer.style.justifyContent='flex-end';
+  footer.style.gap='8px';
+  footer.style.marginTop='8px';
+
+  const done = document.createElement('button');
+  done.className = 'btn';
+  done.textContent = 'Fermer';
+  done.addEventListener('click', () => { modalRoot.style.display='none'; modalRoot.setAttribute('aria-hidden','true'); });
+
+  footer.appendChild(done);
+
+  modal.appendChild(header);
+  modal.appendChild(pre);
+  modal.appendChild(plotDiv);
+  modal.appendChild(footer);
+
+  back.appendChild(modal);
+  modalRoot.appendChild(back);
+
+  // Render sankey in both modal and inline area
+  setTimeout(() => { renderSankey('#modalPlot'); renderSankey('#plotArea'); }, 50);
+}
+
+// Build sankey data and render via Plotly
+function renderSankey(targetSelector = '#plotArea'){
+  if(typeof Plotly === 'undefined'){
+    // if Plotly not loaded, show fallback
+    document.querySelector(targetSelector).innerHTML = '<div style="color:var(--muted)">Plotly library unavailable.</div>';
+    return;
+  }
+  const names = participants.map(p => p.name);
+  const nameToIdx = {};
+  names.forEach((n,i)=>nameToIdx[n]=i);
+
+  const source = [];
+  const target = [];
+  const value = [];
+  const linkColors = [];
+
+  // color palette — generate simple pastel hues
+  const nodeColors = names.map((n,i) => {
+    const hue = Math.round((i * 360 / Math.max(1,names.length)) % 360);
+    return `hsl(${hue} 70% 55%)`;
+  });
+
+  participants.forEach((p,i) => {
+    for(let r=0;r<2;r++){
+      const recip = p.donne_a_qui && p.donne_a_qui[r];
+      if(recip){
+        source.push(i);
+        target.push(nameToIdx[recip.name]);
+        value.push(1);
+        linkColors.push(nodeColors[i]);
+      }
+    }
+  });
+
+  const data = [{
+    type:'sankey',
+    arrangement:'snap',
+    node:{
+      pad:20,
+      thickness:30,
+      line:{color:'black', width:0.5},
+      label:names,
+      color:nodeColors
+    },
+    link:{
+      source:source,
+      target:target,
+      value:value,
+      color:linkColors
+    }
+  }];
+
+  const layout = {
+    title: '🎄 Tirage au sort des cadeaux de Noël 🎁',
+    font:{size:14, family:'Arial'},
+    width: Math.min(window.innerWidth-160, 1000),
+    height: Math.min(window.innerHeight-160, 700),
+    margin:{l:50, r:50, t:80, b:50},
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)'
+  };
+
+  // Create or update the plot
+  const tgtEl = (typeof targetSelector === 'string') ? document.querySelector(targetSelector) : targetSelector;
+  if(!tgtEl) return;
+  // ensure the element is empty
+  tgtEl.innerHTML = '';
+  Plotly.newPlot(tgtEl, data, layout, {responsive:true});
+}
+
+// Wire UI
+addBtn.addEventListener('click', ()=> addParticipant(nameInput.value));
+nameInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') addParticipant(nameInput.value) });
+runBtn.addEventListener('click', runDraw);
+
+clearAll.addEventListener('click', ()=> {
+  if(!confirm('Supprimer tous les participants ?')) return;
+  participants.length = 0;
+  renderParticipants();
+});
+
+randomDemo.addEventListener('click', ()=> {
+  const demo = ['Alice', 'Bob', 'Carla', 'David', 'Eva', 'Franck', 'Gina', 'Hugo'];
+  // clear then add demo
+  participants.length = 0;
+  demo.forEach(n => participants.push({name:n, partner:null, donne_a_qui:[null,null]}));
+  // set a couple example
+  const setPartner = (a,b) => {
+    const pa = participants.find(p=>p.name===a);
+    const pb = participants.find(p=>p.name===b);
+    if(pa && pb){ pa.partner = b; pb.partner = a; }
+  };
+  setPartner('Alice','Bob');
+  setPartner('Carla','David');
+  renderParticipants();
+});
+
+// keyboard shortcuts: ctrl+enter to run
+document.addEventListener('keydown', (e) => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    runDraw();
+  }
+});
+
+// initial render
+renderParticipants();
+updateCount();
+</script>
+</body>
+</html>

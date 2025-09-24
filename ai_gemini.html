@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Santa Generator</title>
+    
+    <!-- Plotly.js Library for the Sankey Diagram -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- General Styling & Setup --- */
+        :root {
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #34495e;
+            --border-color: #e0e6ed;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* --- Main Container --- */
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* --- Header --- */
+        header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        /* --- Input & Buttons --- */
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-cta {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            width: 100%;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-cta:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn-delete:hover {
+            background-color: #e74c3c1a;
+            transform: none;
+        }
+
+        /* --- Participant List --- */
+        #participant-list-container h2 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .participant-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .participant-table th {
+            text-align: left;
+            padding-bottom: 10px;
+            color: #7f8c8d;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        
+        .participant-row {
+            transition: background-color 0.2s;
+        }
+
+        .participant-row:not(:last-child) td {
+             border-bottom: 1px solid var(--border-color);
+        }
+        
+        .participant-row:hover {
+            background-color: #ecf0f12a;
+        }
+
+        .participant-row td {
+            padding: 15px 5px;
+            vertical-align: middle;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .partner-select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--card-bg);
+            font-size: 0.95rem;
+        }
+
+        /* --- Modal for Results --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: auto;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 1100px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <main class="container">
+        <header>
+            <h1>🎅 Secret Santa Generator 🎁</h1>
+        </header>
+
+        <section class="input-group">
+            <input type="text" id="name-input" class="input-field" placeholder="Enter participant's name...">
+            <button id="add-btn" class="btn btn-primary">Add</button>
+        </section>
+
+        <section id="participant-list-container">
+            <h2>Participants</h2>
+            <div id="participant-list">
+                <!-- Participant rows will be generated here by JavaScript -->
+            </div>
+        </section>
+        
+        <button id="launch-btn" class="btn btn-cta" disabled>Launch The Draw!</button>
+    </main>
+
+    <!-- Modal for displaying results -->
+    <div id="results-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="sankey-chart"></div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- STATE & DOM ELEMENTS ---
+        let participants = [];
+        const nameInput = document.getElementById('name-input');
+        const addBtn = document.getElementById('add-btn');
+        const launchBtn = document.getElementById('launch-btn');
+        const participantListDiv = document.getElementById('participant-list');
+        const modal = document.getElementById('results-modal');
+        const closeModalBtn = document.querySelector('.close-button');
+
+
+        // --- HUMAN CLASS (JS equivalent) ---
+        class Human {
+            constructor(name, partner = null) {
+                this.name = name;
+                this.partner = partner;
+                this.givesTo = [null, null];
+            }
+
+            reset() {
+                this.givesTo = [null, null];
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        /**
+         * Renders the list of participants in the UI.
+         */
+        function renderParticipantList() {
+            participantListDiv.innerHTML = ''; // Clear previous list
+
+            if (participants.length === 0) {
+                participantListDiv.innerHTML = '<p style="text-align: center; color: #95a5a6;">Add some people to get started!</p>';
+                launchBtn.disabled = true;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'participant-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th style="width: 5%;"></th>
+                        <th style="width: 45%;">Name</th>
+                        <th style="width: 50%;">Partner (Optional)</th>
+                    </tr>
+                </thead>
+            `;
+            const tbody = document.createElement('tbody');
+
+            const partnerOptions = ["", ...participants.map(p => p.name)];
+
+            participants.forEach(p => {
+                const row = document.createElement('tr');
+                row.className = 'participant-row';
+
+                // Delete button cell
+                const deleteCell = document.createElement('td');
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-delete';
+                deleteBtn.innerHTML = '&#x274C;'; // '❌' character
+                deleteBtn.onclick = () => deleteParticipant(p.name);
+                deleteCell.appendChild(deleteBtn);
+
+                // Name cell
+                const nameCell = document.createElement('td');
+                nameCell.className = 'participant-name';
+                nameCell.textContent = p.name;
+                
+                // Partner select cell
+                const partnerCell = document.createElement('td');
+                const partnerSelect = document.createElement('select');
+                partnerSelect.className = 'partner-select';
+                partnerOptions.forEach(optionName => {
+                    // A person cannot be their own partner
+                    if (optionName !== p.name) {
+                        const option = document.createElement('option');
+                        option.value = optionName;
+                        option.textContent = optionName === "" ? 'None' : optionName;
+                        if (p.partner === optionName) {
+                            option.selected = true;
+                        }
+                        partnerSelect.appendChild(option);
+                    }
+                });
+                partnerSelect.onchange = (e) => setPartner(p.name, e.target.value);
+                partnerCell.appendChild(partnerSelect);
+                
+                row.appendChild(deleteCell);
+                row.appendChild(nameCell);
+                row.appendChild(partnerCell);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            participantListDiv.appendChild(table);
+
+            // A draw requires at least 3 people for interesting results
+            launchBtn.disabled = participants.length < 3;
+        }
+
+        /**
+         * Adds a new participant to the list.
+         */
+        function addParticipant() {
+            const name = nameInput.value.trim();
+            if (name && !participants.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                participants.push(new Human(name));
+                nameInput.value = '';
+                renderParticipantList();
+            } else if (name) {
+                alert('A participant with this name already exists.');
+            }
+            nameInput.focus();
+        }
+
+        /**
+         * Deletes a participant from the list.
+         * @param {string} name - The name of the participant to delete.
+         */
+        function deleteParticipant(name) {
+            participants = participants.filter(p => p.name !== name);
+            // Also remove this person if they were set as a partner anywhere
+            participants.forEach(p => {
+                if (p.partner === name) {
+                    p.partner = null;
+                }
+            });
+            renderParticipantList();
+        }
+
+        /**
+         * Sets a partner for a given participant.
+         * @param {string} participantName - The name of the participant.
+         * @param {string} partnerName - The name of the partner.
+         */
+        function setPartner(participantName, partnerName) {
+            const participant = participants.find(p => p.name === participantName);
+            if (participant) {
+                participant.partner = partnerName || null;
+            }
+            // Optional: You could enforce reciprocal partnership here
+            renderParticipantList();
+        }
+
+
+        // --- DRAWING ALGORITHM ---
+
+        /**
+         * A robust shuffling function (Fisher-Yates shuffle).
+         * @param {Array} array - The array to shuffle.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /**
+         * Performs a single round of drawing gifts.
+         * @param {number} round - The round index (0 or 1).
+         * @returns {boolean} - True on success, false on failure.
+         */
+        function performSingleDraw(round) {
+            let availableRecipients = [...participants];
+            shuffleArray(availableRecipients);
+
+            for (const giver of participants) {
+                let foundRecipient = false;
+                let attempts = 0;
+                
+                while (!foundRecipient && availableRecipients.length > 0 && attempts <= participants.length) {
+                    // If we've cycled through all remaining options without success, it's a dead end.
+                    if (attempts > availableRecipients.length) {
+                        return false; // Indicates failure for this configuration
+                    }
+
+                    let potentialRecipient = availableRecipients.shift();
+                    attempts++;
+
+                    // --- Check the rules ---
+                    const isSelf = potentialRecipient.name === giver.name;
+                    const isPartner = potentialRecipient.name === giver.partner;
+                    const isAlreadyGivingTo = giver.givesTo.some(p => p && p.name === potentialRecipient.name);
+
+                    if (!isSelf && !isPartner && !isAlreadyGivingTo) {
+                        giver.givesTo[round] = potentialRecipient;
+                        foundRecipient = true;
+                    } else {
+                        // Put the invalid choice back at the end of the line
+                        availableRecipients.push(potentialRecipient);
+                    }
+                }
+
+                if (!foundRecipient) {
+                    return false; // Failed to find a recipient for this giver
+                }
+            }
+            return true; // Success
+        }
+
+        /**
+         * Main function to launch the entire drawing process.
+         */
+        function launchDraw() {
+            let success = false;
+            let maxRetries = 100; // Try multiple shuffles to find a valid solution
+
+            for (let i = 0; i < maxRetries; i++) {
+                // 1. Reset everyone's gifts for a fresh attempt
+                participants.forEach(p => p.reset());
+
+                // 2. Perform both rounds
+                const round1Success = performSingleDraw(0);
+                const round2Success = round1Success ? performSingleDraw(1) : false;
+
+                if (round1Success && round2Success) {
+                    success = true;
+                    break; // Found a valid assignment, exit the loop
+                }
+            }
+            
+            if (success) {
+                displayResults();
+            } else {
+                alert("Drawing Error:\nCould not find a valid gift assignment. Please try again, or consider using more participants or fewer partner restrictions.");
+            }
+        }
+
+        // --- RESULTS VISUALIZATION ---
+
+        /**
+         * Generates a color palette for the chart.
+         * @param {number} count - The number of colors needed.
+         * @returns {string[]} An array of hex color codes.
+         */
+        function generateColors(count) {
+            const defaultColors = [
+                '#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', '#34495e',
+                '#95a5a6', '#d35400', '#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad'
+            ];
+            if (count <= defaultColors.length) {
+                return defaultColors.slice(0, count);
+            }
+            // Generate random colors if more are needed
+            const colors = [...defaultColors];
+            for (let i = defaultColors.length; i < count; i++) {
+                colors.push('#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'));
+            }
+            return colors;
+        }
+
+        /**
+         * Displays the results in a modal with a Sankey diagram.
+         */
+        function displayResults() {
+            const names = participants.map(p => p.name);
+            const nameToIndex = new Map(names.map((name, i) => [name, i]));
+            
+            const sources = [];
+            const targets = [];
+            const values = [];
+
+            participants.forEach(giver => {
+                const sourceIndex = nameToIndex.get(giver.name);
+                giver.givesTo.forEach(recipient => {
+                    if (recipient) {
+                        const targetIndex = nameToIndex.get(recipient.name);
+                        sources.push(sourceIndex);
+                        targets.push(targetIndex);
+                        values.push(1); // Each gift has a value of 1
+                    }
+                });
+            });
+
+            const nodeColors = generateColors(names.length);
+            const linkColors = sources.map(s_idx => nodeColors[s_idx]);
+
+            const data = [{
+                type: "sankey",
+                orientation: "h",
+                arrangement: "snap",
+                node: {
+                    pad: 20,
+                    thickness: 30,
+                    line: { color: "black", width: 0.5 },
+                    label: names,
+                    color: nodeColors,
+                },
+                link: {
+                    source: sources,
+                    target: targets,
+                    value: values,
+                    color: linkColors.map(c => c + 'B3'), // Add some transparency to links
+                }
+            }];
+
+            const layout = {
+                title: '🎄 Secret Santa Gift Exchange 🎁',
+                font: { size: 16, family: 'Poppins, sans-serif' },
+                titlefont: { color: 'darkred', size: 24 },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+            };
+
+            Plotly.newPlot('sankey-chart', data, layout, {responsive: true});
+            modal.style.display = 'flex';
+        }
+
+
+        // --- EVENT LISTENERS ---
+        addBtn.addEventListener('click', addParticipant);
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                addParticipant();
+            }
+        });
+        
+        launchBtn.addEventListener('click', launchDraw);
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // --- INITIAL RENDER ---
+        renderParticipantList();
+
+    </script>
+</body>
+</html>
